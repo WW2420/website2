@@ -1,5 +1,6 @@
-"use client"
-import React, { useEffect, useState } from 'react';
+'use client'
+
+import React, { useState } from 'react';
 import { ShoppingCart, Heart, Share2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
@@ -10,38 +11,33 @@ const products = [
   { id: 4, name: 'Gaming Console', price: 499.99, category: 'Gaming' }
 ];
 
+// Generic event tracking function
+const trackEvent = (eventName, eventParams) => {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', eventName, eventParams);
+  }
+};
+
 export default function TestWebsite() {
   const [cart, setCart] = useState([]);
 
-  useEffect(() => {
-    // Initialize GA4 
-    const initGA = () => {
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){window.dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-XXXXXXXXXX'); // Replace with your Measurement ID
-    };
-
-    const loadGA = () => {
-      const script = document.createElement('script');
-      script.src = 'https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX'; // Replace with your Measurement ID
-      script.async = true;
-      document.head.appendChild(script);
-      script.onload = initGA;
-    };
-
-    loadGA();
-  }, []);
-
-  const sendEvent = (eventName, params) => {
-    if (window.gtag) {
-      window.gtag('event', eventName, params);
-    }
+  const handleViewItem = (product) => {
+    trackEvent('view_item', {
+      currency: 'USD',
+      value: product.price,
+      items: [{
+        item_id: product.id,
+        item_name: product.name,
+        price: product.price,
+        currency: 'USD',
+        item_category: product.category
+      }]
+    });
   };
 
   const handleAddToCart = (product) => {
     setCart([...cart, product]);
-    sendEvent('add_to_cart', {
+    trackEvent('add_to_cart', {
       currency: 'USD',
       value: product.price,
       items: [{
@@ -55,22 +51,27 @@ export default function TestWebsite() {
   };
 
   const handleWishlist = (product) => {
-    sendEvent('add_to_wishlist', {
+    trackEvent('add_to_wishlist', {
       currency: 'USD',
       value: product.price,
       items: [{
         item_id: product.id,
         item_name: product.name,
-        price: product.price
+        price: product.price,
+        currency: 'USD',
+        item_category: product.category
       }]
     });
   };
 
   const handleShare = (product) => {
-    sendEvent('share', {
+    trackEvent('share', {
       method: 'Social Share',
       content_type: 'product',
-      item_id: product.id
+      item_id: product.id,
+      item_name: product.name,
+      currency: 'USD',
+      value: product.price
     });
   };
 
@@ -86,7 +87,11 @@ export default function TestWebsite() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {products.map((product) => (
-          <Card key={product.id} className="flex flex-col">
+          <Card 
+            key={product.id} 
+            className="flex flex-col"
+            onClick={() => handleViewItem(product)} // Added view_item event
+          >
             <CardHeader>
               <CardTitle className="text-lg">{product.name}</CardTitle>
             </CardHeader>
